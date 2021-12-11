@@ -13,7 +13,7 @@
 
 
 // ** SETTINGS **
-#define USE_AS_CLOCK    1       //** Set to 1 for CLOCK operation (disable countdown timer)
+#define USE_AS_CLOCK    0       //** Set to 1 for CLOCK operation (disable countdown timer)
 #define WARLOCKS_EN     0       //** Set to 1 to enable scrolling Warlocks Banner/Display         
 
 #define WARLOCKS_TIME   30      //Seconds between Banner/Scrolling effects
@@ -73,7 +73,7 @@ void setup() {
 
     //THEN SETUP - this time/date to countdown to
     //               yr, mo, dy, hr, min, sec 
-    then = DateTime( 20, 02, 22, 23, 59,  59 );
+    then = DateTime( 22, 03, 22, 23, 59,  59 );
 
 
 }
@@ -90,7 +90,7 @@ void loop() {
 
 
 
-  Serial.print("Countdown Timer FRC 1507\n>");
+  Serial.print("Countdown Timer FRC 1507\n");
  
     
   if (! rtc.isrunning())
@@ -265,7 +265,7 @@ void serialComm( void )
       if( index == 0 )                  //Check for empty line
       {
         //Empty line
-        Serial.print(">\n");
+        Serial.print("\n> ");
       }
       else
       {

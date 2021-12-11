@@ -39,6 +39,8 @@ DateTime then;
 
 bool irq_flag = false;
 
+char message[128];
+
 
 
 //IRQ Handler
@@ -97,6 +99,14 @@ void loop() {
   {
     Serial.println("RTC lost power. Set the time!");
   }
+
+
+  ////// Test     //////
+
+  strcpy(message,"12345678 ABCDEFGH IJKLMNOP QRSTUVWXYZ .,!");
+  RunScroll(message);
+  
+  ////// End Test //////
 
 
   //Enable Interrupts
@@ -393,3 +403,28 @@ void RunEffects(void)
     serialComm();             //Check for any serial Communications
   }
 }
+
+
+
+
+
+//Banner/scrolling effects
+void RunScroll( char *string )
+{
+  int16_t offset = 64; //Start at Far Right
+
+  int16_t endoffset =  (  strlen(string) * 6 ) * -1;    //6 = 5dots + 1 space
+  
+
+  while(1)
+  {
+    delay(75); 
+    Sure3208.printString(string,offset); 
+    offset--;
+    if( offset == endoffset) break;
+
+    //serialComm();             //Check for any serial Communications
+    
+  }
+}
+

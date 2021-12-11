@@ -126,47 +126,84 @@ void Sure3208_class::sendDispMem(void)
 }
 
 
-void Sure3208_class::printString(const char *string, int8_t offset)
+void Sure3208_class::printString(char *string, int16_t offset)
 {
-  uint8_t index=0;  //index into mem array
-  uint8_t *pfont;   //ptr to font data to transfer to array
-  uint8_t fsize;    //size of font to transfer
+  uint16_t index=0;  //index into mem array
+  uint8_t  *pfont;   //ptr to font data to transfer to array
+  uint8_t  fsize;    //size of font to transfer
 
   //load mem with 0 if offset > 0 to shift string RIGHT
   if( offset > 0 )
-    for(int i=0;i<offset;i++)
+    for(uint16_t i=0;i<offset;i++)
       mem[index++] = 0x00;
 
 
   //Now run through string and convert to raw font data
   while(*string!=0)
   {
-    switch(*string)
-    {
-      
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9':
-        pfont =  (uint8_t*)&fontNUM[  (*string-'0') * FONT_NUM_WIDTH  ];  //calculate offset into NUM font
-        fsize = FONT_NUM_WIDTH;
-        break;
-      
-      case ':': pfont = (uint8_t*)fontCLN;  fsize = sizeof(fontCLN);  break;
+//    switch(*string)
+//    {
+//      
+//      case '0':
+//      case '1':
+//      case '2':
+//      case '3':
+//      case '4':
+//      case '5':
+//      case '6':
+//      case '7':
+//      case '8':
+//      case '9':
+//        pfont =  (uint8_t*)&fontNUM[  (*string-'0') * FONT_NUM_WIDTH  ];  //calculate offset into NUM font
+//        fsize = FONT_NUM_WIDTH;
+//        break;
+//      
+//      case ':': pfont = (uint8_t*)fontCLN;  fsize = sizeof(fontCLN);  break;
+//
+//      case ' ': pfont = (uint8_t*)fontSP;   fsize = sizeof(fontSP);   break;
+//
+//      case 'X': pfont = (uint8_t*)fontWAR;  fsize = sizeof(fontWAR);  break;
+//      
+//      default:  pfont = (uint8_t*)fontER;   fsize = sizeof(fontER);   break;
+//    }
 
-      case ' ': pfont = (uint8_t*)fontSP;   fsize = sizeof(fontSP);   break;
 
-      case 'X': pfont = (uint8_t*)fontWAR;  fsize = sizeof(fontWAR);  break;
-      
-      default:  pfont = (uint8_t*)fontER;   fsize = sizeof(fontER);   break;
-    }
-
+  //Letter
+  if(  (*string>='A') && (*string<='Z') )
+  {
+    pfont =  (uint8_t*)&fontLET[  (*string-'A') * FONT_LET_WIDTH  ];  //calculate offset into NUM font
+    fsize = FONT_LET_WIDTH;
+  }
+  else
+  if(  (*string>='1') && (*string<='9') )
+  {
+    pfont =  (uint8_t*)&fontLET[  (26 + *string-'1') * FONT_LET_WIDTH  ];  //calculate offset into NUM font
+    fsize = FONT_LET_WIDTH;
+  }
+  else
+  if( *string == '0'  )
+  {
+    pfont =  (uint8_t*)&fontLET[  (35 + *string-'0') * FONT_LET_WIDTH  ];  //calculate offset into NUM font
+    fsize = FONT_LET_WIDTH;
+  }
+  else
+  if( *string == ' '  )
+  {
+    pfont =  (uint8_t*)fontSP;
+    fsize = sizeof(fontSP);
+  }
+  else
+  if( *string == ':'  )
+  {
+    pfont =  (uint8_t*)fontCLN;
+    fsize = sizeof(fontCLN);
+  }
+  else
+  {
+    //Default-Error
+    pfont = (uint8_t*)fontER;
+    fsize = sizeof(fontER);
+  }
 
 
       

@@ -16,6 +16,8 @@
 #define FONT_NUM_WIDTH  6
 #define FONT_LET_WIDTH  5
 
+typedef enum { COLON=0, PERIOD, COMMA, EXMARK } punct_t;
+
 
 const uint8_t fontSP[] PROGMEM  = { 0b00000000,
                                     0b00000000,
@@ -97,7 +99,12 @@ const uint8_t fontNUM[] PROGMEM = { 0b01111100,         // Zero
                                     0b01111000 };       
                                    
                                
-const uint8_t fontCLN[] PROGMEM = { 0b00100100};                                
+const uint8_t fontPUNC[] PROGMEM = {
+                                    0b00100100,         //Colon
+                                    0b00000010,         //Period
+                                    0b00000011,         //Comma
+                                    0b11111010,         //EX Mark !
+                                   };                                
 
 const uint8_t fontER[] PROGMEM = {  0b01111100,
                                     0b01000100,

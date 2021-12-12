@@ -13,12 +13,14 @@
 
 
 // ** SETTINGS **
-#define USE_AS_CLOCK    0       //** Set to 1 for CLOCK operation (disable countdown timer)
+#define CLOCK_EN        0       //** Set to 1 for CLOCK enabled
+#define COUNTDOWN_EN    0       //** Set to 1 for COUNTDOWN 
+
 #define WARLOCKS_EN     0       //** Set to 1 to enable scrolling Warlocks Banner/Display         
 
 #define WARLOCKS_TIME   30      //Seconds between Banner/Scrolling effects
 
-#define ADD_ONEHOUR     0       //Set to 1 for Daylight Savings (Add +1 hour)
+
 
 // ** DEFINES **
 #define PIN_LED   13
@@ -34,8 +36,8 @@
 //Globals
 RTC_DS3231 rtc;
 
-DateTime now;
-DateTime then;
+DateTime curr_time;
+DateTime goal_time; //Countdown timer end time/date
 
 bool irq_flag = false;
 
@@ -73,9 +75,9 @@ void setup() {
 
     //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 
-    //THEN SETUP - this time/date to countdown to
-    //               yr, mo, dy, hr, min, sec 
-    then = DateTime( 22, 03, 22, 23, 59,  59 );
+    //Goal setup - this time/date to countdown to
+    //                    yr, mo, dy, hr, min, sec 
+    goal_time = DateTime( 22, 03, 22, 23, 59,  59 );
 
 
 }
@@ -88,7 +90,10 @@ void loop() {
   
   char dispstr[20];
 
-  uint32_t next_disp_time = 30*1000;  //30 sec
+  uint32_t sm_timer   = 0;
+  uint8_t  curr_state = 0;
+  uint8_t  prev_state = 255;
+
 
 
 
@@ -103,8 +108,8 @@ void loop() {
 
   ////// Test     //////
 
-  strcpy(message,"12345678 ABCDEFGH IJKLMNOP QRSTUVWXYZ .,!");
-  RunScroll(message);
+  // strcpy(message,"12345678 ABCDEFGH IJKLMNOP QRSTUVWXYZ .,!");
+  // RunScroll(message);
   
   ////// End Test //////
 
@@ -120,109 +125,63 @@ void loop() {
 
 
     //************************************************************************
-    if( WARLOCKS_EN && ( millis() > next_disp_time)  )
-    {
-      RunEffects();
-      next_disp_time += WARLOCKS_TIME * 1000;     
-    }
-
-
-    //************************************************************************
     if( irq_flag )
     {
       irq_flag = false;
-      now = rtc.now();
+      curr_time = rtc.now();
       
-//    printDate(now);
-//    printSpan(then,now);
+//    printDate(curr_time);
+//    printSpan(goal_time,curr_time);
       
-#if USE_AS_CLOCK==1
-      //Default.  Display dd:hh:mm:ss
-      uint8_t hour = now.hour();
-
-#if ADD_ONEHOUR==1
-      //Account for Daylight Savings
-      hour += 1;
-#endif  //Add one hour
-      
-      if( hour>12) hour=hour-12;
-             
-      dispstr[0]  = (hour<10) ? ' ': ('0'+ (hour / 10));  //If <10, ditch leading zero
-      dispstr[1]  = '0'+ (hour % 10);
-      dispstr[2]  = ':';
-      
-      dispstr[3]  = '0'+ (now.minute() / 10);
-      dispstr[4]  = '0'+ (now.minute() % 10);
-      dispstr[5]  = ':';
-      
-      dispstr[6]  = '0'+ (now.second() / 10 );
-      dispstr[7]  = '0'+ (now.second() % 10 );
-
-      dispstr[8]  = 0;  //Null String
-        
-      Sure3208.printString(dispstr,9);  
-      
-#else
-            
-      TimeSpan t = then-now;
-      
-      //Some checks on the results....
-      if( t.totalseconds() < 0 ) 
+      //Did state machine change states?
+      if( curr_state != prev_state )
       {
-        //** We already passeed the date.  Shows zeros...
-        Sure3208.printString("00:00:00:00",1);    
+        prev_state = curr_state;
+        sm_timer = 0;
+        Serial.print("sm>");Serial.print(curr_state);Serial.println();    //SM Debug
       }
-      else if( t.days() > 99 )
+
+      //State Machine....
+      switch ( curr_state )
       {
-        //** Num days>99 - we don't have enough room for ddd:hh:mm:ss.  
-        //So we have to do ddd:hh:mm
-        uint16_t days = t.days();        
-        uint8_t  hdays = days/100;
-                 days  = days%100;
-        uint8_t  tdays = days/10;
-        uint8_t  odays = days%10;
-        
-        dispstr[0]  = '0'+ hdays;
-        dispstr[1]  = '0'+ tdays;
-        dispstr[2]  = '0'+ odays;
-        dispstr[3]  = ':';
-        
-        dispstr[4]  = '0'+(t.hours() / 10 );
-        dispstr[5]  = '0'+(t.hours() % 10 );
-        dispstr[6]  = ':';
-        
-        dispstr[7]  = '0'+(t.minutes() / 10 );
-        dispstr[8]  = '0'+(t.minutes() % 10 );
-        dispstr[9]  = 0;  //Null String
-          
-        Sure3208.printString(dispstr,5);    
-      }
-      else
-      {
-        //Default.  Display dd:hh:mm:ss
-        dispstr[0]  = '0'+ (t.days() / 10 );
-        dispstr[1]  = '0'+ (t.days() % 10 );
-        dispstr[2]  = ':';
-        
-        dispstr[3]  = '0'+(t.hours() / 10 );
-        dispstr[4]  = '0'+(t.hours() % 10 );
-        dispstr[5]  = ':';
-        
-        dispstr[6]  = '0'+(t.minutes() / 10 );
-        dispstr[7]  = '0'+(t.minutes() % 10 );
-        dispstr[8]  = ':';
-    
-        dispstr[9]  = '0'+(t.seconds() / 10 );
-        dispstr[10] = '0'+(t.seconds() % 10 );
-        dispstr[11] = 0;  //Null String
-          
-        Sure3208.printString(dispstr,1);   
-      } 
-  
-#endif  
+        case 0:
+          RunScroll("HELLO!");
+          curr_state++;
+          break;
       
-       digitalWrite(PIN_TP,ledtoggle?HIGH:LOW);
-       
+        case 1:
+          DisplayCurrTime(curr_time);
+          if( sm_timer == 15 )          
+            curr_state++;
+          break;
+
+        case 2:
+          DisplayCountdownTime( curr_time, goal_time );
+          if( sm_timer == 15 )
+            curr_state++;
+          break;
+
+        case 3:
+          RunScroll("HI!");
+          curr_state++;
+          break;
+
+        case 4:
+          RunEffects();
+          curr_state = 1;   //Go back to time!
+          break; 
+
+
+        default:
+          //Should never get here
+          curr_state = 0;   //Reset!
+          break;
+      }
+      
+      //Clean up....
+      sm_timer++;         //Bump timer
+
+      
        //blink LED
       digitalWrite(PIN_LED,ledtoggle?HIGH:LOW);
       ledtoggle = !ledtoggle;  
@@ -238,9 +197,13 @@ void loop() {
 
 
   }  //End Infinite Loop
-}
+}   //End LOOP
+//***************************************************************************
 
 
+
+
+//***************************************************************************
 //Serial Comm
 void serialComm( void )
 {
@@ -305,11 +268,11 @@ void serialParse( char *string, uint8_t len )
     {
 
       case 'c':
-          if( len == 1 ){ printDate(now); return; }      
+          if( len == 1 ){ printDate(curr_time); return; }      
         break;
       
       case 't':
-          if( len == 1 ){ printDate(then); return; }      
+          if( len == 1 ){ printDate(goal_time); return; }      
         break;     
       
       case 's':
@@ -396,7 +359,7 @@ void RunEffects(void)
   while(1)
   {
     delay(75); 
-    Sure3208.printString("X",offset); 
+    Sure3208.printString("$",offset); 
     offset--;
     if( offset==-75) return;
 
@@ -423,8 +386,101 @@ void RunScroll( char *string )
     offset--;
     if( offset == endoffset) break;
 
-    //serialComm();             //Check for any serial Communications
+    serialComm();             //Check for any serial Communications
     
   }
 }
+
+
+
+
+//***************************************************************************
+void DisplayCurrTime( DateTime curr_time )
+{
+  char dispstr[20];
+
+  //Default.  Display dd:hh:mm:ss
+  uint8_t hour = curr_time.hour();
+
+  if( hour>12) hour=hour-12;
+              
+  dispstr[0]  = (hour<10) ? ' ': ('0'+ (hour / 10));  //If <10, ditch leading zero
+  dispstr[1]  = '0'+ (hour % 10);
+  dispstr[2]  = ':';
+
+  dispstr[3]  = '0'+ (curr_time.minute() / 10);
+  dispstr[4]  = '0'+ (curr_time.minute() % 10);
+  dispstr[5]  = ':';
+
+  dispstr[6]  = '0'+ (curr_time.second() / 10 );
+  dispstr[7]  = '0'+ (curr_time.second() % 10 );
+
+  dispstr[8]  = 0;  //Null String
+        
+  Sure3208.printString(dispstr,9);  
+
+}
+
+
+//***************************************************************************
+void DisplayCountdownTime( DateTime curr_time, DateTime goal_time )
+{
+
+  char dispstr[20];          
+  TimeSpan t = goal_time-curr_time;
+  
+  //Some checks on the results....
+  if( t.totalseconds() < 0 ) 
+  {
+    //** We already passeed the date.  Shows zeros...
+    Sure3208.printString("00:00:00:00",1);    
+  }
+  else if( t.days() > 99 )
+  {
+    //** Num days>99 - we don't have enough room for ddd:hh:mm:ss.  
+    //So we have to do ddd:hh:mm
+    uint16_t days = t.days();        
+    uint8_t  hdays = days/100;
+              days  = days%100;
+    uint8_t  tdays = days/10;
+    uint8_t  odays = days%10;
+    
+    dispstr[0]  = '0'+ hdays;
+    dispstr[1]  = '0'+ tdays;
+    dispstr[2]  = '0'+ odays;
+    dispstr[3]  = ':';
+    
+    dispstr[4]  = '0'+(t.hours() / 10 );
+    dispstr[5]  = '0'+(t.hours() % 10 );
+    dispstr[6]  = ':';
+    
+    dispstr[7]  = '0'+(t.minutes() / 10 );
+    dispstr[8]  = '0'+(t.minutes() % 10 );
+    dispstr[9]  = 0;  //Null String
+      
+    Sure3208.printString(dispstr,5);    
+  }
+  else
+  {
+    //Default.  Display dd:hh:mm:ss
+    dispstr[0]  = '0'+ (t.days() / 10 );
+    dispstr[1]  = '0'+ (t.days() % 10 );
+    dispstr[2]  = ':';
+    
+    dispstr[3]  = '0'+(t.hours() / 10 );
+    dispstr[4]  = '0'+(t.hours() % 10 );
+    dispstr[5]  = ':';
+    
+    dispstr[6]  = '0'+(t.minutes() / 10 );
+    dispstr[7]  = '0'+(t.minutes() % 10 );
+    dispstr[8]  = ':';
+
+    dispstr[9]  = '0'+(t.seconds() / 10 );
+    dispstr[10] = '0'+(t.seconds() % 10 );
+    dispstr[11] = 0;  //Null String
+      
+    Sure3208.printString(dispstr,1);   
+  }       
+}
+
 

@@ -8,7 +8,9 @@ Since then, "Bag Day" has been eliminated from the rules and this project has mo
 ## Hardware Used
 
 Arduino Uno board
+
 DS1307 Real time clock
+
 Sure 3208 LED Dot Matrix Display (HW Version 2)
 
 ## Configuration

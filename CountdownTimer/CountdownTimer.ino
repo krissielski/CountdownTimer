@@ -16,10 +16,6 @@
 #define CLOCK_EN        0       //** Set to 1 for CLOCK enabled
 #define COUNTDOWN_EN    0       //** Set to 1 for COUNTDOWN 
 
-#define WARLOCKS_EN     0       //** Set to 1 to enable scrolling Warlocks Banner/Display         
-
-#define WARLOCKS_TIME   30      //Seconds between Banner/Scrolling effects
-
 
 
 // ** DEFINES **
@@ -93,6 +89,7 @@ void loop() {
   uint32_t sm_timer   = 0;
   uint8_t  curr_state = 0;
   uint8_t  prev_state = 255;
+  uint8_t  task_sel   = 0;
 
 
 
@@ -107,10 +104,8 @@ void loop() {
 
 
   ////// Test     //////
-
   // strcpy(message,"12345678 ABCDEFGH IJKLMNOP QRSTUVWXYZ .,!");
   // RunScroll(message);
-  
   ////// End Test //////
 
 
@@ -138,17 +133,17 @@ void loop() {
       {
         prev_state = curr_state;
         sm_timer = 0;
-        Serial.print("sm>");Serial.print(curr_state);Serial.println();    //SM Debug
+        //Serial.print("sm>");Serial.print(curr_state);Serial.println();    //SM Debug
       }
 
       //State Machine....
       switch ( curr_state )
       {
         case 0:
-          //RunScroll("HELLO!");          
+          RunScroll("HELLO!");          
           randomSeed( curr_time.unixtime() );          
-          RunGameOfLife(0);
-          //curr_state++;
+          curr_state++;
+          task_sel = 0;
           break;
       
         case 1:
@@ -164,14 +159,33 @@ void loop() {
           break;
 
         case 3:
-          RunScroll("HI!");
-          curr_state++;
+          //Where to go next?
+          if( task_sel == 0)  curr_state = 10;
+          if( task_sel == 1)  curr_state = 11;
+          if( task_sel == 2)  curr_state = 12;
+
+          task_sel++;
+          if( task_sel==3)  task_sel =0;
+
           break;
 
-        case 4:
+
+        case 10:
+          RunScroll("HI!");
+          curr_state = 1;   //Return to start
+          break;
+
+        case 11:
           RunEffects();
-          curr_state = 1;   //Go back to time!
+          curr_state = 1;   //Return to start
           break; 
+
+        case 12:
+          RunGameOfLife(0);
+          curr_state = 1;   //Return to start
+          break;
+
+
 
 
         default:

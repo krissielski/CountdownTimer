@@ -236,6 +236,23 @@ void Sure3208_class::printString(char *string, int16_t offset)
   
 }
 
+void Sure3208_class::printBuffer(uint8_t *buffer, int8_t size)
+{
+
+  //move buffer into mem
+  for(int i=0;i<size;i++)
+  {
+
+    if(i<mem_size)                     //check if there is room left in mem buffer
+      mem[i] = buffer[i];            
+
+  }
+
+  //Now send mem to Display boards
+  sendDispMem(); 
+}
+
+
 
 //Hidden class Instantiation 
 Sure3208_class Sure3208;

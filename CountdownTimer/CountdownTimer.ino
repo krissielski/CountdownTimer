@@ -145,7 +145,8 @@ void loop() {
       switch ( curr_state )
       {
         case 0:
-          RunScroll("HELLO!");
+          //RunScroll("HELLO!");
+          RunGameOfLife(0);
           curr_state++;
           break;
       
@@ -481,6 +482,212 @@ void DisplayCountdownTime( DateTime curr_time, DateTime goal_time )
       
     Sure3208.printString(dispstr,1);   
   }       
+}
+
+
+#define GOL_NUM_ROWS  8
+#define GOL_NUM_COLS  64
+
+//***************************************************************************
+void RunGameOfLife( uint8_t start_type )
+{
+
+  //Board is 8x64
+  uint8_t curr_board[64] = {0};
+  uint8_t next_board[64] = {0};
+  
+  uint8_t num_neighbors;
+  uint8_t round=0;
+
+
+  golSetCell(curr_board,0,0);
+
+  // golSetCell(curr_board,7,62);
+  // golSetCell(curr_board,7,63);
+  // golSetCell(curr_board,6,62);
+  // golSetCell(curr_board,6,63);
+  // golClrCell(curr_board,7,63);
+
+
+
+  golSetCell(curr_board,4,3);
+  golSetCell(curr_board,4,4);
+  golSetCell(curr_board,4,5);
+  
+  golSetCell(curr_board,5,20);
+  golSetCell(curr_board,4,20);
+  golSetCell(curr_board,3,20);
+
+  golSetCell(curr_board,5,30);
+  golSetCell(curr_board,4,30);
+  golSetCell(curr_board,5,31);
+  golSetCell(curr_board,4,31);
+
+  golSetCell(curr_board,0,35);
+  golSetCell(curr_board,1,35);
+  golSetCell(curr_board,0,36);
+  golSetCell(curr_board,1,36);
+
+
+
+  golSetCell(curr_board,3,55);
+  golSetCell(curr_board,3,56);
+  golSetCell(curr_board,3,57);
+  golSetCell(curr_board,4,55);
+  golSetCell(curr_board,4,56);
+  golSetCell(curr_board,4,57);
+  golSetCell(curr_board,5,56);
+
+
+
+  Sure3208.printBuffer(curr_board,GOL_NUM_COLS);
+
+  delay(1000);
+
+
+  while(1)
+  {
+    //Run the game!
+    round++;
+
+
+    Serial.println("****************************************");
+    Serial.print("Round ");Serial.print(round);  Serial.println();  
+
+
+    for( int r=0; r<GOL_NUM_ROWS; r++  )
+    {
+      for(int c=0; c<GOL_NUM_COLS; c++ )
+      {
+
+        num_neighbors = golGetNumNeighbors(curr_board,r,c);
+
+        if( !golGetCell(curr_board,r,c) )
+        {
+          if( num_neighbors == 3)
+            golSetCell(next_board,r,c);   //A Birth!
+          else
+            golClrCell(next_board,r,c);   //Keep empty
+        }
+        else
+        {
+          if( (num_neighbors < 2) || (num_neighbors > 3) )
+            golClrCell(next_board,r,c);   //Dies
+          else
+            golSetCell(next_board,r,c);   //Lives
+        }
+
+        // //DEBUG***********************
+        // Serial.print(r);  Serial.print(" ");  
+        // Serial.print(c);  Serial.print("  ");  
+        // Serial.print( golGetCell(curr_board,r,c) );  Serial.print(" ");  
+        // Serial.print( num_neighbors );  Serial.print(" ");  
+        // Serial.print( golGetCell(next_board,r,c) );  Serial.print(" ");  
+        // Serial.println();
+        // //****************************
+
+
+      }
+    }
+
+
+    for(int c=0; c<GOL_NUM_COLS; c++ )
+    {
+      curr_board[c] = next_board[c];
+      next_board[c] = 0;
+    }
+
+    Sure3208.printBuffer(curr_board,GOL_NUM_COLS);
+    delay(1000);
+
+
+    // if( round == 3)
+    // {
+    //   delay(1000000);
+    // }
+
+  }
+
+}
+
+
+
+
+//***************************************************************************
+// Game of Life Helper Functions
+
+
+void golSetCell( uint8_t* board, uint8_t row, uint8_t col  )
+{
+  //Sanity checks
+  if( row >= GOL_NUM_ROWS ) return;
+  if( col >= GOL_NUM_COLS ) return;
+  board[col] |= 1<<row;
+}
+
+void golClrCell( uint8_t* board, uint8_t row, uint8_t col  )
+{
+  //Sanity checks
+  if( row >= GOL_NUM_ROWS ) return;
+  if( col >= GOL_NUM_COLS ) return;
+  board[col] &=  ~(1<<row);
+}
+
+boolean golGetCell( uint8_t* board, uint8_t row, uint8_t col  )
+{
+  //Sanity checks
+  if( row >= GOL_NUM_ROWS ) return;
+  if( col >= GOL_NUM_COLS ) return;
+
+  if(  (board[col] & 1<<row) > 0 )
+    return true;
+
+  return false;
+}
+
+
+uint8_t golGetNumNeighbors( uint8_t* board, uint8_t row, uint8_t col  )
+{
+
+  int r;
+  int c;
+
+  uint8_t count = 0;
+
+  for( int ir=-1; ir<2; ir++)
+  {
+    r = (int)row + ir;
+
+    if( r < 0 )             continue;
+    if( r >= GOL_NUM_ROWS ) continue;
+
+    for( int ic=-1; ic <2; ic++ )
+    {
+      c = (int)col + ic;
+
+      if( c < 0 )             continue;
+      if( c >= GOL_NUM_COLS ) continue;     
+      if( ir==0 && ic==0 )    continue;   //Skip self
+
+      if( golGetCell(board,r,c) )
+        count++;
+
+    // //***************************************
+    //     Serial.print(r);  Serial.print(" ");  
+    //     Serial.print(c);  Serial.print("  ");  
+    //     Serial.print( golGetCell(board,r,c) );  Serial.print(" ");  
+    //     Serial.println();
+
+    // //***************************************
+
+    }
+  }
+
+        // Serial.print( count );
+        // Serial.println();
+
+
+  return count;
 }
 
 

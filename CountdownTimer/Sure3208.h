@@ -72,6 +72,7 @@ class Sure3208_class
     void clearMemory(void);
 
     void printString(char *string, int16_t offset);
+    void printBuffer(uint8_t *buffer, int8_t size);
   
 };
 

@@ -417,6 +417,9 @@ void DisplayCurrTime( DateTime curr_time )
 
   //Default.  Display dd:hh:mm:ss
   uint8_t hour = curr_time.hour();
+  boolean ispm = false;
+
+  if( (hour > 11) && (hour < 24) )  ispm=true;
 
   if( hour>12) hour=hour-12;
               
@@ -426,10 +429,20 @@ void DisplayCurrTime( DateTime curr_time )
 
   dispstr[3]  = '0'+ (curr_time.minute() / 10);
   dispstr[4]  = '0'+ (curr_time.minute() % 10);
-  dispstr[5]  = ':';
 
-  dispstr[6]  = '0'+ (curr_time.second() / 10 );
-  dispstr[7]  = '0'+ (curr_time.second() % 10 );
+  //Removed seconds and replaced with AM/PM
+  // dispstr[5]  = ':';
+  // dispstr[6]  = '0'+ (curr_time.second() / 10 );
+  // dispstr[7]  = '0'+ (curr_time.second() % 10 );
+
+  dispstr[5]  = ' ';
+
+  if( ispm )
+    dispstr[6]  = 'P';
+  else
+    dispstr[6]  = 'A';
+
+    dispstr[7]  = 'M';
 
   dispstr[8]  = 0;  //Null String
         

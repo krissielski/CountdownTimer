@@ -145,9 +145,10 @@ void loop() {
       switch ( curr_state )
       {
         case 0:
-          //RunScroll("HELLO!");
+          //RunScroll("HELLO!");          
+          randomSeed( curr_time.unixtime() );          
           RunGameOfLife(0);
-          curr_state++;
+          //curr_state++;
           break;
       
         case 1:
@@ -485,6 +486,8 @@ void DisplayCountdownTime( DateTime curr_time, DateTime goal_time )
 }
 
 
+
+//GoL Board is 8x64
 #define GOL_NUM_ROWS  8
 #define GOL_NUM_COLS  64
 
@@ -492,68 +495,27 @@ void DisplayCountdownTime( DateTime curr_time, DateTime goal_time )
 void RunGameOfLife( uint8_t start_type )
 {
 
-  //Board is 8x64
-  uint8_t curr_board[64] = {0};
-  uint8_t next_board[64] = {0};
+  uint8_t curr_board[GOL_NUM_COLS] = {0};
+  uint8_t next_board[GOL_NUM_COLS] = {0};
   
   uint8_t num_neighbors;
   uint8_t round=0;
 
-
-  golSetCell(curr_board,0,0);
-
-  // golSetCell(curr_board,7,62);
-  // golSetCell(curr_board,7,63);
-  // golSetCell(curr_board,6,62);
-  // golSetCell(curr_board,6,63);
-  // golClrCell(curr_board,7,63);
-
-
-
-  golSetCell(curr_board,4,3);
-  golSetCell(curr_board,4,4);
-  golSetCell(curr_board,4,5);
-  
-  golSetCell(curr_board,5,20);
-  golSetCell(curr_board,4,20);
-  golSetCell(curr_board,3,20);
-
-  golSetCell(curr_board,5,30);
-  golSetCell(curr_board,4,30);
-  golSetCell(curr_board,5,31);
-  golSetCell(curr_board,4,31);
-
-  golSetCell(curr_board,0,35);
-  golSetCell(curr_board,1,35);
-  golSetCell(curr_board,0,36);
-  golSetCell(curr_board,1,36);
-
-
-
-  golSetCell(curr_board,3,55);
-  golSetCell(curr_board,3,56);
-  golSetCell(curr_board,3,57);
-  golSetCell(curr_board,4,55);
-  golSetCell(curr_board,4,56);
-  golSetCell(curr_board,4,57);
-  golSetCell(curr_board,5,56);
-
-
+  //Randomly load board
+  for( int rnum=0; rnum<100; rnum++)
+  {
+    golSetCell(curr_board,random(GOL_NUM_ROWS),random(GOL_NUM_COLS));
+  }
 
   Sure3208.printBuffer(curr_board,GOL_NUM_COLS);
 
-  delay(1000);
+  delay(2000);
 
 
   while(1)
   {
     //Run the game!
     round++;
-
-
-    Serial.println("****************************************");
-    Serial.print("Round ");Serial.print(round);  Serial.println();  
-
 
     for( int r=0; r<GOL_NUM_ROWS; r++  )
     {
@@ -577,36 +539,28 @@ void RunGameOfLife( uint8_t start_type )
             golSetCell(next_board,r,c);   //Lives
         }
 
-        // //DEBUG***********************
-        // Serial.print(r);  Serial.print(" ");  
-        // Serial.print(c);  Serial.print("  ");  
-        // Serial.print( golGetCell(curr_board,r,c) );  Serial.print(" ");  
-        // Serial.print( num_neighbors );  Serial.print(" ");  
-        // Serial.print( golGetCell(next_board,r,c) );  Serial.print(" ");  
-        // Serial.println();
-        // //****************************
-
-
       }
     }
 
-
+    //Update current board and clear next board
     for(int c=0; c<GOL_NUM_COLS; c++ )
     {
       curr_board[c] = next_board[c];
       next_board[c] = 0;
     }
 
+    //Display it!
     Sure3208.printBuffer(curr_board,GOL_NUM_COLS);
-    delay(1000);
+    delay(500);
 
 
-    // if( round == 3)
-    // {
-    //   delay(1000000);
-    // }
+    //It seems to settle out before 50 rounds.  
+    if( round == 50)
+    {
+      return;
+    }
 
-  }
+  } //END infinite while
 
 }
 
@@ -672,20 +626,8 @@ uint8_t golGetNumNeighbors( uint8_t* board, uint8_t row, uint8_t col  )
       if( golGetCell(board,r,c) )
         count++;
 
-    // //***************************************
-    //     Serial.print(r);  Serial.print(" ");  
-    //     Serial.print(c);  Serial.print("  ");  
-    //     Serial.print( golGetCell(board,r,c) );  Serial.print(" ");  
-    //     Serial.println();
-
-    // //***************************************
-
     }
   }
-
-        // Serial.print( count );
-        // Serial.println();
-
 
   return count;
 }

@@ -152,9 +152,10 @@ void loop() {
             curr_state++;
           break;
 
+//Remove Countdown timer
         case 2:
-          DisplayCountdownTime( curr_time, goal_time );
-          if( sm_timer == 15 )
+//          DisplayCountdownTime( curr_time, goal_time );
+//          if( sm_timer == 15 )
             curr_state++;
           break;
 
@@ -171,7 +172,7 @@ void loop() {
 
 
         case 10:
-          RunScroll("HI!");
+          RunScroll("PNP3 ELECTRONICS");
           curr_state = 1;   //Return to start
           break;
 
@@ -388,7 +389,7 @@ void RunEffects(void)
 
 
 //Banner/scrolling effects
-void RunScroll( char *string )
+void RunScroll( const char *string )
 {
   int16_t offset = 64; //Start at Far Right
 
@@ -617,8 +618,8 @@ void golClrCell( uint8_t* board, uint8_t row, uint8_t col  )
 boolean golGetCell( uint8_t* board, uint8_t row, uint8_t col  )
 {
   //Sanity checks
-  if( row >= GOL_NUM_ROWS ) return;
-  if( col >= GOL_NUM_COLS ) return;
+  if( row >= GOL_NUM_ROWS ) return false;
+  if( col >= GOL_NUM_COLS ) return false;
 
   if(  (board[col] & 1<<row) > 0 )
     return true;
@@ -658,5 +659,3 @@ uint8_t golGetNumNeighbors( uint8_t* board, uint8_t row, uint8_t col  )
 
   return count;
 }
-
-

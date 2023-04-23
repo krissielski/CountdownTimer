@@ -126,7 +126,7 @@ void Sure3208_class::sendDispMem(void)
 }
 
 
-void Sure3208_class::printString(char *string, int16_t offset)
+void Sure3208_class::printString(const char *string, int16_t offset)
 {
   uint16_t index=0;  //index into mem array
   uint8_t  *pfont;   //ptr to font data to transfer to array
